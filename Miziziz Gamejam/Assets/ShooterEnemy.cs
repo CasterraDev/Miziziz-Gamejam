@@ -5,6 +5,7 @@ using UnityEngine;
 public class ShooterEnemy : MonoBehaviour
 {
     public GameObject player;
+    public bool moveAble = true;
     public float spd = 2f;
     public float range = 1.5f;
     public GameObject bulletPrefab;
@@ -23,21 +24,27 @@ public class ShooterEnemy : MonoBehaviour
     void Update()
     {
         dist = Vector3.Distance(transform.position, player.transform.position);
-
-        if (dist > range)
+        RaycastHit2D hit = Physics2D.Raycast(transform.position, (player.transform.position - transform.position), range);
+        Debug.Log(hit.collider);
+        if (hit.collider == null || hit.collider.CompareTag("Player") || hit.collider.CompareTag("Shield"))
         {
-            transform.position = Vector2.MoveTowards(transform.position, player.transform.position, spd * Time.deltaTime);
-        }
-        else
-        {
-            if (shooterTimer < Time.time)
+            if (dist > range && moveAble)
             {
-                var bullet = Instantiate(bulletPrefab, transform.position, Quaternion.identity);
-                var moveDir = (player.transform.position - transform.position).normalized * spd;
-                bullet.GetComponent<Rigidbody2D>().velocity = new Vector2(moveDir.x, moveDir.y);
-                Vector3 rot = (player.transform.position - transform.position);
-                bullet.transform.rotation = ;
-                shooterTimer = Time.time + shootingCooldown;
+                transform.position = Vector2.MoveTowards(transform.position, player.transform.position, spd * Time.deltaTime);
+            }
+            else
+            {
+                if (shooterTimer < Time.time)
+                {
+                    //Find the player and rotate to it
+                    Vector3 direction = player.transform.position - transform.position;
+                    direction.Normalize();
+                    float rotation = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+
+                    //Shoot Bullet
+                    var bullet = Instantiate(bulletPrefab, transform.position, Quaternion.Euler(0f, 0f, rotation - 180));
+                    shooterTimer = Time.time + shootingCooldown;
+                }
             }
         }
     }
